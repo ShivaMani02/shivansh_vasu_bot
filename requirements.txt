@@ -4,3 +4,4 @@ APScheduler==3.10.4
 requests==2.31.0
 pytz==2023.3
 better_profanity==0.7.0
+waitress==3.0.0

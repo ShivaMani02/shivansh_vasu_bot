@@ -10,6 +10,7 @@ from flask import Flask
 from apscheduler.schedulers.background import BackgroundScheduler
 import pytz
 from better_profanity import profanity
+from waitress import serve
 
 profanity.load_censor_words()
 profanity.add_censor_words(["scam", "crypto", "bitcoin", "invest", "free money", "click here to win", "earn fast", "betting"])
@@ -356,10 +357,37 @@ def auto_moderator_and_marketing(message):
         bot.reply_to(message, f"Struggling with DSA? Check out the **Master DSA 360 Series**: {COURSE_DSA}", parse_mode='Markdown')
 
 @app.route('/')
-def index(): return "✅ Telegram Bot is running perfectly!"
+def index():
+    html = """<!DOCTYPE html>
+<html>
+<head>
+    <title>Shivansh Vasu Bot</title>
+    <style>
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #0f172a; color: white; font-family: 'Inter', sans-serif; margin: 0; overflow: hidden; }
+        .container { text-align: center; padding: 40px; border-radius: 20px; background: rgba(255,255,255,0.05); box-shadow: 0 10px 30px rgba(0,0,0,0.5); animation: float 4s ease-in-out infinite; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0px); } }
+        .emoji { font-size: 70px; margin: 0; display: inline-block; animation: wave 2.5s infinite; transform-origin: 70% 70%; }
+        @keyframes wave { 0% { transform: rotate( 0.0deg) } 10% { transform: rotate(14.0deg) } 20% { transform: rotate(-8.0deg) } 30% { transform: rotate(14.0deg) } 40% { transform: rotate(-4.0deg) } 50% { transform: rotate( 10.0deg) } 60% { transform: rotate( 0.0deg) } 100% { transform: rotate( 0.0deg) } }
+        h1 { margin: 15px 0 5px; font-size: 26px; }
+        p { color: #94a3b8; margin-bottom: 25px; }
+        .btn { display: inline-block; padding: 12px 25px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; text-decoration: none; border-radius: 30px; font-weight: bold; transition: 0.3s; }
+        .btn:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(139, 92, 246, 0.5); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="emoji">👋🤖</div>
+        <h1>Beep Boop! I'm Awake!</h1>
+        <p>Your Telegram Bot is running perfectly on the cloud.</p>
+        <a href="https://www.theshivanshvasu.com" class="btn" target="_blank">Visit theshivanshvasu.com</a>
+    </div>
+</body>
+</html>"""
+    return html
 
 def run_flask():
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
+    port = int(os.environ.get("PORT", 10000))
+    serve(app, host="0.0.0.0", port=port)
 
 if __name__ == "__main__":
     threading.Thread(target=run_flask).start()
