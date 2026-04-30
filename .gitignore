@@ -1,1 +1,6 @@
 .env
+.env.local
+*.txt
+__pycache__/
+*.pyc
+.DS_Store
