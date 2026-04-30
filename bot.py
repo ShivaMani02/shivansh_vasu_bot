@@ -22,7 +22,7 @@ WEBSITE = "https://theshivanshvasu.com/"
 NOTES_LINK = "https://theshivanshvasu.com/notes"
 LINKTREE = "https://linktr.ee/shivanshvasu"
 YOUTUBE_HANDLE = "@shivanshvasu"
-YOUTUBE = f"https://youtube.com/{YOUTUBE_HANDLE}"
+YOUTUBE = f"https://www.youtube.com/{YOUTUBE_HANDLE}"
 INSTAGRAM = "https://instagram.com/theshivanshvasuofficial"
 LINKEDIN = "https://www.linkedin.com/theshivanshvasu"
 X_TWITTER = "https://x.com/theshivanshvasu"
@@ -230,7 +230,7 @@ def handle_leave(message):
 
 def broadcast_to_all(message_text, pin=False):
     channel_id = get_id(CHANNEL_ID_FILE, "CHANNEL_ID")
-    group_id = get_id(GROUP_ID_FILE, "GROUP_CHAT_ID")
+    group_id = get_id(GROUP_ID_FILE, "GROUP_ID")
     for target in [channel_id, group_id]:
         if target:
             try:
@@ -242,16 +242,26 @@ def broadcast_to_all(message_text, pin=False):
 def check_youtube_rss():
     print("Checking YouTube RSS...")
     channel_id = get_id(CHANNEL_ID_FILE, "CHANNEL_ID")
-    group_id = get_id(GROUP_ID_FILE, "GROUP_CHAT_ID")
+    group_id = get_id(GROUP_ID_FILE, "GROUP_ID")
     if not channel_id and not group_id: return
     try:
-        resp = requests.get(f"https://youtube.com/{YOUTUBE_HANDLE}", timeout=10)
-        yt_channel_id_match = re.search(r'"channelId":"(UC[\w-]+)"', resp.text)
-        if not yt_channel_id_match: return
-        yt_channel_id = yt_channel_id_match.group(1)
-
-        rss_url = f"https://www.youtube.com/feeds/videos.xml?channel_id={yt_channel_id}"
-        resp_rss = requests.get(rss_url, timeout=10)
+        # For YouTube handles, use the handle directly in RSS feed
+        # If using channel ID, use: https://www.youtube.com/feeds/videos.xml?channel_id={channel_id}
+        # For handle-based feed (alternative method):
+        rss_url = f"https://www.youtube.com/feeds/videos.xml?user={YOUTUBE_HANDLE.lstrip('@')}"
+        
+        try:
+            resp_rss = requests.get(rss_url, timeout=10)
+        except:
+            # Fallback: Try to fetch from handle page and extract channel ID
+            resp = requests.get(f"https://www.youtube.com/{YOUTUBE_HANDLE}", timeout=10)
+            yt_channel_id_match = re.search(r'"channelId":"(UC[\w-]+)"', resp.text)
+            if not yt_channel_id_match:
+                print(f"Could not extract YouTube channel ID")
+                return
+            yt_channel_id = yt_channel_id_match.group(1)
+            rss_url = f"https://www.youtube.com/feeds/videos.xml?channel_id={yt_channel_id}"
+            resp_rss = requests.get(rss_url, timeout=10)
         root = ET.fromstring(resp_rss.content)
         ns = {'atom': 'http://www.w3.org/2005/Atom', 'yt': 'http://www.youtube.com/xml/schemas/2015'}
         latest_entry = root.find('atom:entry', ns)
