@@ -13,7 +13,20 @@ from better_profanity import profanity
 from waitress import serve
 
 profanity.load_censor_words()
-profanity.add_censor_words(["scam", "crypto", "bitcoin", "invest", "free money", "click here to win", "earn fast", "betting"])
+censor_words = [
+    "scam", "crypto", "bitcoin", "invest", "free money", "click here to win", "earn fast", "betting",
+    "binance", "ethereum", "eth", "btc", "usdt", "wallet", "airdrop", "giveaway", "lottery", 
+    "jackpot", "forex", "trading", "signals", "profit", "roi", "multiplier", "returns", 
+    "dm me", "pm me", "message me for", "inbox me", "hack", "recovery", "recover your",
+    "casino", "gambling", "poker", "promotions", "sponsor", "onlyfans", "sugar daddy", "sugar mommy",
+    "ponzi", "pyramid", "mlm", "make money online", "passive income", "double your",
+    "idiot", "moron", "loser", "dumbass", "retard", "kys", "kill yourself", "die", "bastard",
+    "bitch", "slut", "whore", "cunt", "nazi", "chutiya", "madarchod", "bhenchod", "bhosdike",
+    "gandu", "randi", "kamina", "saala", "kutta",
+    "do your assignment", "pay me to code", "hire a hacker", "hack your", "leaked course",
+    "udemy leak", "exam help", "proxy exam", "pay for project"
+]
+profanity.add_censor_words(censor_words)
 
 BOT_TOKEN = os.environ.get('BOT_TOKEN', 'YOUR_BOT_TOKEN_HERE')
 bot = telebot.TeleBot(BOT_TOKEN)
@@ -25,9 +38,10 @@ LINKTREE = "https://linktr.ee/shivanshvasu"
 YOUTUBE_HANDLE = "@shivanshvasu"
 YOUTUBE = f"https://www.youtube.com/{YOUTUBE_HANDLE}"
 INSTAGRAM = "https://instagram.com/theshivanshvasuofficial"
-LINKEDIN = "https://www.linkedin.com/theshivanshvasu"
+LINKEDIN = "https://www.linkedin.com/in/theshivanshvasu"
 X_TWITTER = "https://x.com/theshivanshvasu"
 WHATSAPP = "https://whatsapp.com/channel/0029VbAWGE5ICVfcjjKTAS0B"
+MENTORSHIP = "https://topmate.io/theshivanshvasu"
 COURSE_DSA = "https://theshivanshvasu.com/courses/master-dsa-360-series"
 COURSE_SYSTEM_DESIGN = "https://theshivanshvasu.com/courses/system-design-mastery-series"
 COURSE_FULL_STACK = "https://theshivanshvasu.com/courses/elevate-full-stack-series"
@@ -60,26 +74,46 @@ def is_admin(chat_id, user_id):
     except:
         return False
 
-def get_main_keyboard():
+def get_welcome_keyboard():
+    markup = InlineKeyboardMarkup()
+    markup.row_width = 2
+    markup.add(
+        InlineKeyboardButton("☰ Main Menu", callback_data="show_main_menu"),
+        InlineKeyboardButton("📚 Resources", callback_data="show_resources"),
+        InlineKeyboardButton("⌨️ List Commands", callback_data="show_commands")
+    )
+    return markup
+
+def get_links_keyboard():
     markup = InlineKeyboardMarkup()
     markup.row_width = 2
     markup.add(
         InlineKeyboardButton("🌐 Website", url=WEBSITE),
-        InlineKeyboardButton("📚 Free Notes", url=NOTES_LINK),
         InlineKeyboardButton("🔴 YouTube", url=YOUTUBE),
         InlineKeyboardButton("🔗 All Links", url=LINKTREE),
-        InlineKeyboardButton("🎓 View Premium Courses", callback_data="show_courses")
+        InlineKeyboardButton("🤝 1-2-1 Mentorship", url=MENTORSHIP),
+        InlineKeyboardButton("💼 LinkedIn", url=LINKEDIN),
+        InlineKeyboardButton("⬅️ Back", callback_data="back_to_welcome")
     )
     return markup
 
-def get_courses_keyboard():
+def get_resources_keyboard():
     markup = InlineKeyboardMarkup()
     markup.row_width = 1
     markup.add(
+        InlineKeyboardButton("📝 DSA & System Design Notes", url="https://www.theshivanshvasu.com/notes"),
+        InlineKeyboardButton("🔥 DSA 51 Sheet", url="https://www.theshivanshvasu.com/dsa-51-sheet"),
         InlineKeyboardButton("🚀 Master DSA 360", url=COURSE_DSA),
         InlineKeyboardButton("🏗️ System Design", url=COURSE_SYSTEM_DESIGN),
-        InlineKeyboardButton("💻 Full Stack", url=COURSE_FULL_STACK)
+        InlineKeyboardButton("💻 Full Stack Elevate", url=COURSE_FULL_STACK),
+        InlineKeyboardButton("💻 Full Stack MERN Series", url="https://www.theshivanshvasu.com/courses#mern-series"),
+        InlineKeyboardButton("⬅️ Back", callback_data="back_to_welcome")
     )
+    return markup
+
+def get_commands_keyboard():
+    markup = InlineKeyboardMarkup()
+    markup.add(InlineKeyboardButton("⬅️ Back", callback_data="back_to_welcome"))
     return markup
 
 @bot.message_handler(commands=['setgroup'])
@@ -105,23 +139,23 @@ def set_admin(message):
     else:
         bot.reply_to(message, "Please run this command in a direct message with me.")
 
-@bot.message_handler(commands=['announce', 'newnotes'])
-def channel_announcements(message):
-    if not is_admin(message.chat.id, message.from_user.id): return
-    channel_id = get_id(CHANNEL_ID_FILE, "CHANNEL_ID")
-    if not channel_id:
-        return bot.reply_to(message, "❌ Channel not set. Check your .env file or use /setchannel.")
-    
-    command = message.text.split(' ')[0]
-    text = message.text.replace(command, "").strip()
-    if not text: return bot.reply_to(message, "❌ Please provide a message.")
-
-    prefix = "📢 **Announcement:**" if command == "/announce" else "📚 **New Notes Uploaded!**"
-    try:
-        bot.send_message(channel_id, f"{prefix}\n\n{text}", parse_mode="Markdown")
-        bot.reply_to(message, f"✅ Successfully broadcasted to the channel!")
-    except Exception as e:
-        bot.reply_to(message, f"❌ Failed: {e}")
+# @bot.message_handler(commands=['announce', 'newnotes'])
+# def channel_announcements(message):
+#     if not is_admin(message.chat.id, message.from_user.id): return
+#     channel_id = get_id(CHANNEL_ID_FILE, "CHANNEL_ID")
+#     if not channel_id:
+#         return bot.reply_to(message, "❌ Channel not set. Check your .env file or use /setchannel.")
+#     
+#     command = message.text.split(' ')[0]
+#     text = message.text.replace(command, "").strip()
+#     if not text: return bot.reply_to(message, "❌ Please provide a message.")
+# 
+#     prefix = "📢 **Announcement:**" if command == "/announce" else "📚 **New Notes Uploaded!**"
+#     try:
+#         bot.send_message(channel_id, f"{prefix}\n\n{text}", parse_mode="Markdown")
+#         bot.reply_to(message, f"✅ Successfully broadcasted to the channel!")
+#     except Exception as e:
+#         bot.reply_to(message, f"❌ Failed: {e}")
 
 @bot.message_handler(commands=['ban', 'kick', 'mute', 'unban'])
 def moderation(message):
@@ -147,9 +181,9 @@ def moderation(message):
     except Exception as e:
         bot.reply_to(message, f"❌ Failed to execute. Do I have admin rights? Error: {e}")
 
-@bot.message_handler(commands=['start', 'menu'])
+@bot.message_handler(commands=['start', 'menu', 'help'])
 def send_welcome(message):
-    bot.send_message(message.chat.id, f"Hello {message.from_user.first_name}! 👋\n\n**{COMMUNITY_TAGLINE}**\n\nChoose an option below:", reply_markup=get_main_keyboard(), parse_mode='Markdown')
+    bot.send_message(message.chat.id, f"Hello {message.from_user.first_name}! 👋\n\n**{COMMUNITY_TAGLINE}**\n\nChoose an option below:", reply_markup=get_welcome_keyboard(), parse_mode='Markdown')
 
 @bot.message_handler(commands=['notes'])
 def notes_command(message):
@@ -167,9 +201,9 @@ def resources_command(message):
 def doubt_command(message):
     bot.send_message(message.chat.id, "❓ **How to ask a doubt:**\n1. State the exact problem/question.\n2. Share your code snippet.\n3. Mention what you have tried so far.\n\n_Do not just say 'Bro help' or 'Code not working'._", parse_mode="Markdown")
 
-@bot.message_handler(commands=['quiz'])
-def quiz_command(message):
-    bot.send_poll(message.chat.id, "What is the time complexity of Binary Search?", ["O(1)", "O(n)", "O(log n)", "O(n^2)"], is_anonymous=False, type='quiz', correct_option_id=2)
+# @bot.message_handler(commands=['quiz'])
+# def quiz_command(message):
+#     bot.send_poll(message.chat.id, "What is the time complexity of Binary Search?", ["O(1)", "O(n)", "O(log n)", "O(n^2)"], is_anonymous=False, type='quiz', correct_option_id=2)
 
 @bot.message_handler(commands=['suggest'])
 def suggest_command(message):
@@ -183,15 +217,15 @@ def suggest_command(message):
     else:
         bot.reply_to(message, "❌ Admin DM is not configured yet.")
 
-@bot.message_handler(commands=['tip', 'interview'])
-def random_tip(message):
-    tips = [
-        "💡 **Pro Tip**: In System Design, always ask clarifying questions before drawing architecture.",
-        "💡 **DSA**: Fast and slow pointer approach (Tortoise and Hare) is great for cycle detection in LinkedLists.",
-        "💡 **Interview**: When stuck on a DSA problem, think aloud. The interviewer wants to see your thought process.",
-        "💡 **Fact**: Python's list `.sort()` uses Timsort, which runs in O(N log N) worst-case time!"
-    ]
-    bot.send_message(message.chat.id, random.choice(tips), parse_mode="Markdown")
+# @bot.message_handler(commands=['tip', 'interview'])
+# def random_tip(message):
+#     tips = [
+#         "💡 **Pro Tip**: In System Design, always ask clarifying questions before drawing architecture.",
+#         "💡 **DSA**: Fast and slow pointer approach (Tortoise and Hare) is great for cycle detection in LinkedLists.",
+#         "💡 **Interview**: When stuck on a DSA problem, think aloud. The interviewer wants to see your thought process.",
+#         "💡 **Fact**: Python's list `.sort()` uses Timsort, which runs in O(N log N) worst-case time!"
+#     ]
+#     bot.send_message(message.chat.id, random.choice(tips), parse_mode="Markdown")
 
 @bot.message_handler(content_types=['new_chat_members'])
 def handle_join(message):
@@ -215,128 +249,141 @@ def handle_verification(call):
         try:
             bot.restrict_chat_member(call.message.chat.id, user_id, can_send_messages=True, can_send_media_messages=True, can_send_other_messages=True, can_add_web_page_previews=True)
             bot.delete_message(call.message.chat.id, call.message.message_id)
-            bot.send_message(call.message.chat.id, f"✅ Verified! Welcome [{call.from_user.first_name}](tg://user?id={user_id}). Check out /start for resources.", parse_mode="Markdown")
+            bot.send_message(call.message.chat.id, f"✅ Verified! Welcome [{call.from_user.first_name}](tg://user?id={user_id}).\n\n**{COMMUNITY_TAGLINE}**\n\nChoose an option below:", reply_markup=get_welcome_keyboard(), parse_mode="Markdown")
         except: pass
     else:
         bot.answer_callback_query(call.id, "❌ This button is not for you!")
 
-@bot.callback_query_handler(func=lambda call: call.data == "show_courses")
-def handle_courses(call):
+@bot.callback_query_handler(func=lambda call: call.data in ["show_main_menu", "show_resources", "show_commands", "back_to_welcome"])
+def handle_navigation(call):
     bot.answer_callback_query(call.id)
-    bot.send_message(call.message.chat.id, "🎓 **Premium Courses:**", reply_markup=get_courses_keyboard(), parse_mode='Markdown')
+    if call.data == "show_main_menu":
+        bot.edit_message_text("🌐 **Main Menu:**", call.message.chat.id, call.message.message_id, reply_markup=get_links_keyboard(), parse_mode='Markdown')
+    elif call.data == "show_resources":
+        bot.edit_message_text("📚 **Resources:**", call.message.chat.id, call.message.message_id, reply_markup=get_resources_keyboard(), parse_mode='Markdown')
+    elif call.data == "show_commands":
+        text = ("**Available Commands:**\n"
+                "📚 `/notes` - Study materials\n"
+                "🗺️ `/roadmap` - Curriculums\n"
+                "🔥 `/resources` - Problem sheets\n"
+                "❓ `/doubt` - Ask a coding doubt\n"
+                "📫 `/suggest <idea>` - Send feedback")
+        bot.edit_message_text(text, call.message.chat.id, call.message.message_id, reply_markup=get_commands_keyboard(), parse_mode='Markdown')
+    elif call.data == "back_to_welcome":
+        bot.edit_message_text(f"Hello! 👋\n\n**{COMMUNITY_TAGLINE}**\n\nChoose an option below:", call.message.chat.id, call.message.message_id, reply_markup=get_welcome_keyboard(), parse_mode='Markdown')
 
-@bot.message_handler(content_types=['left_chat_member'])
-def handle_leave(message):
-    bot.send_message(message.chat.id, f"Goodbye {message.left_chat_member.first_name}! We'll miss you. 👋")
+# @bot.message_handler(content_types=['left_chat_member'])
+# def handle_leave(message):
+#     bot.send_message(message.chat.id, f"Goodbye {message.left_chat_member.first_name}! We'll miss you. 👋")
 
-def broadcast_to_all(message_text, pin=False):
-    channel_id = get_id(CHANNEL_ID_FILE, "CHANNEL_ID")
-    group_id = get_id(GROUP_ID_FILE, "GROUP_ID")
-    for target in [channel_id, group_id]:
-        if target:
-            try:
-                msg = bot.send_message(target, message_text, parse_mode="Markdown", disable_web_page_preview=False)
-                if pin and str(target) == str(channel_id):
-                    bot.pin_chat_message(target, msg.message_id)
-            except Exception as e: print(f"Broadcast failed to {target}: {e}")
+# def broadcast_to_all(message_text, pin=False):
+#     channel_id = get_id(CHANNEL_ID_FILE, "CHANNEL_ID")
+#     group_id = get_id(GROUP_ID_FILE, "GROUP_ID")
+#     for target in [channel_id, group_id]:
+#         if target:
+#             try:
+#                 msg = bot.send_message(target, message_text, parse_mode="Markdown", disable_web_page_preview=False)
+#                 if pin and str(target) == str(channel_id):
+#                     bot.pin_chat_message(target, msg.message_id)
+#             except Exception as e: print(f"Broadcast failed to {target}: {e}")
 
-def check_youtube_rss():
-    print("Checking YouTube RSS...")
-    channel_id = get_id(CHANNEL_ID_FILE, "CHANNEL_ID")
-    group_id = get_id(GROUP_ID_FILE, "GROUP_ID")
-    if not channel_id and not group_id: return
-    try:
-        # For YouTube handles, use the handle directly in RSS feed
-        # If using channel ID, use: https://www.youtube.com/feeds/videos.xml?channel_id={channel_id}
-        # For handle-based feed (alternative method):
-        rss_url = f"https://www.youtube.com/feeds/videos.xml?user={YOUTUBE_HANDLE.lstrip('@')}"
-        
-        try:
-            resp_rss = requests.get(rss_url, timeout=10)
-        except:
-            # Fallback: Try to fetch from handle page and extract channel ID
-            resp = requests.get(f"https://www.youtube.com/{YOUTUBE_HANDLE}", timeout=10)
-            yt_channel_id_match = re.search(r'"channelId":"(UC[\w-]+)"', resp.text)
-            if not yt_channel_id_match:
-                print(f"Could not extract YouTube channel ID")
-                return
-            yt_channel_id = yt_channel_id_match.group(1)
-            rss_url = f"https://www.youtube.com/feeds/videos.xml?channel_id={yt_channel_id}"
-            resp_rss = requests.get(rss_url, timeout=10)
-        root = ET.fromstring(resp_rss.content)
-        ns = {'atom': 'http://www.w3.org/2005/Atom', 'yt': 'http://www.youtube.com/xml/schemas/2015'}
-        latest_entry = root.find('atom:entry', ns)
-        
-        if latest_entry is not None:
-            video_id = latest_entry.find('yt:videoId', ns).text
-            video_url = latest_entry.find('atom:link', ns).attrib['href']
-            title = latest_entry.find('atom:title', ns).text
-            
-            last_seen_id = get_id(LAST_VIDEO_FILE)
-            if video_id != last_seen_id:
-                text = f"🚨 **NEW VIDEO UPLOADED!** 🚨\n\n🎬 **{title}**\n\nWatch it now and drop a like! 👇\n👉 {video_url}"
-                broadcast_to_all(text, pin=True)
-                save_id(LAST_VIDEO_FILE, video_id)
-                print(f"Posted new video: {title}")
-    except Exception as e: print(f"YouTube RSS Error: {e}")
+# def check_youtube_rss():
+#     print("Checking YouTube RSS...")
+#     channel_id = get_id(CHANNEL_ID_FILE, "CHANNEL_ID")
+#     group_id = get_id(GROUP_ID_FILE, "GROUP_ID")
+#     if not channel_id and not group_id: return
+#     try:
+#         # For YouTube handles, use the handle directly in RSS feed
+#         # If using channel ID, use: https://www.youtube.com/feeds/videos.xml?channel_id={channel_id}
+#         # For handle-based feed (alternative method):
+#         rss_url = f"https://www.youtube.com/feeds/videos.xml?user={YOUTUBE_HANDLE.lstrip('@')}"
+#         
+#         try:
+#             resp_rss = requests.get(rss_url, timeout=10)
+#         except:
+#             # Fallback: Try to fetch from handle page and extract channel ID
+#             resp = requests.get(f"https://www.youtube.com/{YOUTUBE_HANDLE}", timeout=10)
+#             yt_channel_id_match = re.search(r'"channelId":"(UC[\w-]+)"', resp.text)
+#             if not yt_channel_id_match:
+#                 print(f"Could not extract YouTube channel ID")
+#                 return
+#             yt_channel_id = yt_channel_id_match.group(1)
+#             rss_url = f"https://www.youtube.com/feeds/videos.xml?channel_id={yt_channel_id}"
+#             resp_rss = requests.get(rss_url, timeout=10)
+#         root = ET.fromstring(resp_rss.content)
+#         ns = {'atom': 'http://www.w3.org/2005/Atom', 'yt': 'http://www.youtube.com/xml/schemas/2015'}
+#         latest_entry = root.find('atom:entry', ns)
+#         
+#         if latest_entry is not None:
+#             video_id = latest_entry.find('yt:videoId', ns).text
+#             video_url = latest_entry.find('atom:link', ns).attrib['href']
+#             title = latest_entry.find('atom:title', ns).text
+#             
+#             last_seen_id = get_id(LAST_VIDEO_FILE)
+#             if video_id != last_seen_id:
+#                 text = f"🚨 **NEW VIDEO UPLOADED!** 🚨\n\n🎬 **{title}**\n\nWatch it now and drop a like! 👇\n👉 {video_url}"
+#                 broadcast_to_all(text, pin=True)
+#                 save_id(LAST_VIDEO_FILE, video_id)
+#                 print(f"Posted new video: {title}")
+#     except Exception as e: print(f"YouTube RSS Error: {e}")
 
-def fetch_leetcode_potd():
-    try:
-        url = "https://leetcode.com/graphql"
-        query = {
-            "query": """
-            query questionOfToday {
-                activeDailyCodingChallengeQuestion {
-                    link
-                    question {
-                        title
-                        difficulty
-                    }
-                }
-            }
-            """
-        }
-        response = requests.post(url, json=query, timeout=10)
-        data = response.json()['data']['activeDailyCodingChallengeQuestion']
-        title = data['question']['title']
-        difficulty = data['question']['difficulty']
-        link = "https://leetcode.com" + data['link']
-        return f"🎯 **LeetCode Problem of the Day:**\n\n**{title}** ({difficulty})\n\nSolve it here: {link}\n#POTD #LeetCode #DSA"
-    except Exception as e:
-        print(f"LeetCode API Error: {e}")
-        return "🎯 **Problem of the Day:**\n\nTry solving 'Two Sum' optimally today. Hint: Use a HashMap to do it in O(N) time!\n#POTD #DSA"
+# def fetch_leetcode_potd():
+#     try:
+#         url = "https://leetcode.com/graphql"
+#         query = {
+#             "query": """
+#             query questionOfToday {
+#                 activeDailyCodingChallengeQuestion {
+#                     link
+#                     question {
+#                         title
+#                         difficulty
+#                     }
+#                 }
+#             }
+#             """
+#         }
+#         response = requests.post(url, json=query, timeout=10)
+#         data = response.json()['data']['activeDailyCodingChallengeQuestion']
+#         title = data['question']['title']
+#         difficulty = data['question']['difficulty']
+#         link = "https://leetcode.com" + data['link']
+#         return f"🎯 **LeetCode Problem of the Day:**\n\n**{title}** ({difficulty})\n\nSolve it here: {link}\n#POTD #LeetCode #DSA"
+#     except Exception as e:
+#         print(f"LeetCode API Error: {e}")
+#         return "🎯 **Problem of the Day:**\n\nTry solving 'Two Sum' optimally today. Hint: Use a HashMap to do it in O(N) time!\n#POTD #DSA"
 
-def fetch_zenquote():
-    try:
-        response = requests.get("https://zenquotes.io/api/random", timeout=10)
-        data = response.json()
-        quote = data[0]['q']
-        author = data[0]['a']
-        return f"🌟 **Sunday Motivation:**\n\n_\"{quote}\"_\n— **{author}**"
-    except:
-        return "🌟 **Sunday Motivation:**\n\n_\"The only way to do great work is to love what you do.\"_\n— **Steve Jobs**"
+# def fetch_zenquote():
+#     try:
+#         response = requests.get("https://zenquotes.io/api/random", timeout=10)
+#         data = response.json()
+#         quote = data[0]['q']
+#         author = data[0]['a']
+#         return f"🌟 **Sunday Motivation:**\n\n_\"{quote}\"_\n— **{author}**"
+#     except:
+#         return "🌟 **Sunday Motivation:**\n\n_\"The only way to do great work is to love what you do.\"_\n— **Steve Jobs**"
 
-def send_daily_dsa():
-    broadcast_to_all("☀️ **Good Morning! Daily DSA Tip:**\n\nAlways analyze time and space complexity BEFORE you write the actual code. Think of edge cases like empty arrays or negative numbers!")
+# def send_daily_dsa():
+#     broadcast_to_all("☀️ **Good Morning! Daily DSA Tip:**\n\nAlways analyze time and space complexity BEFORE you write the actual code. Think of edge cases like empty arrays or negative numbers!")
 
-def send_potd():
-    message = fetch_leetcode_potd()
-    broadcast_to_all(message)
+# def send_potd():
+#     message = fetch_leetcode_potd()
+#     broadcast_to_all(message)
 
-def send_weekly_topic():
-    broadcast_to_all("📚 **Topic of the Week:**\n\nThis week we focus on **Dynamic Programming**. Start with Fibonacci, move to Knapsack, and understand state transitions.\nGood luck!")
+# def send_weekly_topic():
+#     broadcast_to_all("📚 **Topic of the Week:**\n\nThis week we focus on **Dynamic Programming**. Start with Fibonacci, move to Knapsack, and understand state transitions.\nGood luck!")
 
-def send_sunday_quote():
-    message = fetch_zenquote()
-    broadcast_to_all(message)
+# def send_sunday_quote():
+#     message = fetch_zenquote()
+#     broadcast_to_all(message)
 
-scheduler = BackgroundScheduler(timezone=IST)
-scheduler.add_job(func=check_youtube_rss, trigger="interval", hours=12)
-scheduler.add_job(func=send_daily_dsa, trigger="cron", hour=8, minute=0)
-scheduler.add_job(func=send_potd, trigger="cron", hour=9, minute=0)
-scheduler.add_job(func=send_weekly_topic, trigger="cron", day_of_week='mon', hour=10, minute=0)
-scheduler.add_job(func=send_sunday_quote, trigger="cron", day_of_week='sun', hour=13, minute=0)
-scheduler.start()
+# scheduler = BackgroundScheduler(timezone=IST)
+# scheduler.add_job(func=check_youtube_rss, trigger="interval", hours=12)
+# scheduler.add_job(func=send_daily_dsa, trigger="cron", hour=8, minute=0)
+# scheduler.add_job(func=send_potd, trigger="cron", hour=9, minute=0)
+# scheduler.add_job(func=send_weekly_topic, trigger="cron", day_of_week='mon', hour=10, minute=0)
+# scheduler.add_job(func=send_sunday_quote, trigger="cron", day_of_week='sun', hour=13, minute=0)
+# scheduler.start()
 
 @bot.message_handler(func=lambda message: True)
 def auto_moderator_and_marketing(message):
@@ -351,10 +398,8 @@ def auto_moderator_and_marketing(message):
         except: pass
         return
 
-    if any(keyword in text for keyword in ["notes", "pdf", "study material", "resources"]):
-        bot.reply_to(message, f"Hey! Need notes? 📚 Access our complete vault here: {NOTES_LINK}")
-    elif any(keyword in text for keyword in ["dsa", "leetcode", "data structures"]):
-        bot.reply_to(message, f"Struggling with DSA? Check out the **Master DSA 360 Series**: {COURSE_DSA}", parse_mode='Markdown')
+    if re.search(r'\b(note|notes)\b', text):
+        bot.reply_to(message, f"📚 Looking for study materials? Access our complete notes vault here:\n{NOTES_LINK}")
 
 @app.route('/')
 def index():
